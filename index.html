@@ -28,6 +28,7 @@ select:focus,input:focus{outline:none;border-color:#2563eb}
 .note{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:1000;background:#fff;color:#b45309;border:1px solid #fcd34d;border-radius:8px;padding:6px 12px;font-size:12px;display:none}
 .sublbl{background:transparent;border:0;box-shadow:none;color:#fff;font-size:11px;font-weight:700;padding:0;text-shadow:0 0 3px #000,0 0 3px #000,0 0 4px #000}
 .sublbl:before{display:none}
+.pt-lbl{background:none!important;border:none!important;box-shadow:none!important;font-size:10px;font-weight:700;color:#0f172a;text-shadow:0 0 2px #fff,0 0 2px #fff,0 0 3px #fff;white-space:nowrap;pointer-events:none;padding:0!important}
 .drawer{position:absolute;left:0;right:0;bottom:0;height:46%;background:#fff;color:#0f172a;display:none;flex-direction:column;box-shadow:0 -3px 14px rgba(0,0,0,.3);z-index:1200}
 .tp-head{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;background:#f8fafc}
 .tp-btn{background:#2563eb;color:#fff;border:0;border-radius:6px;padding:6px 11px;font-size:12.5px;font-weight:700;cursor:pointer;margin-left:6px}
@@ -182,13 +183,19 @@ function renderClusters(){
   const z=map.getZoom(),b=map.getBounds().pad(0.15);
   if(z>=15){
     // Zoom dekat: tampilkan titik individual di viewport
-    for(const p of SHOWN){
-      if(!b.contains([p[0],p[1]]))continue;
+    const inView=[];
+    for(const p of SHOWN){if(b.contains([p[0],p[1]]))inView.push(p);}
+    const showLbl=inView.length<=500;
+    for(const p of inView){
       const bad=p[2]!==0;
       L.circleMarker([p[0],p[1]],{renderer:cv,radius:bad?7:5,color:'#fff',weight:1.2,
         fillColor:COLOR[p[2]],fillOpacity:bad?.95:.85})
         .on('click',()=>L.popup().setLatLng([p[0],p[1]]).setContent(popup(p)).openOn(map))
         .addTo(ptLayer);
+      if(showLbl&&p[10]){
+        L.marker([p[0],p[1]],{icon:L.divIcon({className:'pt-lbl',html:esc(String(p[10])),
+          iconSize:null,iconAnchor:[-9,4]}),interactive:false,keyboard:false}).addTo(ptLayer);
+      }
     }
     return;
   }
